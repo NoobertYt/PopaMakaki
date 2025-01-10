@@ -109,11 +109,6 @@
                 margin: 0;
                 padding: 5px 0;
             }
-
-            .reply {
-                padding-left: 20px;
-                color: #007b7b;
-            }
     </style>
 </head>
 <body>
@@ -144,10 +139,19 @@
     </div>
 
     <script>
-        // Массив для хранения сообщений
-        let messages = [];
+        // Проверяем сообщения в localStorage при загрузке страницы
+        window.onload = function() {
+            const chat = document.getElementById('chat');
+            const messages = JSON.parse(localStorage.getItem('messages')) || [];
 
-        // Функция для отправки сообщения
+            messages.forEach(function(message) {
+                const p = document.createElement('p');
+                p.textContent = `User: ${message}`;
+                chat.appendChild(p);
+            });
+        };
+
+        // Функция отправки сообщения
         function sendSupportMessage() {
             const message = document.getElementById('supportMessage').value;
             if (!message) {
@@ -155,53 +159,20 @@
                 return;
             }
 
-            // Сохраняем сообщение
-            const messageData = {
-                content: message,
-                replies: []
-            };
+            // Добавляем сообщение в localStorage
+            const messages = JSON.parse(localStorage.getItem('messages')) || [];
+            messages.push(message);
+            localStorage.setItem('messages', JSON.stringify(messages));
 
-            messages.push(messageData);
-            updateChat();
-            document.getElementById('supportMessage').value = ''; // очищаем поле ввода
-        }
-
-        // Функция для отображения сообщений в чате
-        function updateChat() {
+            // Отображаем сообщение в чате
             const chat = document.getElementById('chat');
-            chat.innerHTML = ''; // Очищаем чат
+            const userMessage = document.createElement('p');
+            userMessage.textContent = `You: ${message}`;
+            chat.appendChild(userMessage);
 
-            messages.forEach((message, index) => {
-                const messageElement = document.createElement('p');
-                messageElement.textContent = `You: ${message.content}`;
-
-                // Кнопка для ответа
-                const replyButton = document.createElement('button');
-                replyButton.textContent = 'Reply';
-                replyButton.onclick = () => promptForReply(index);
-
-                chat.appendChild(messageElement);
-                chat.appendChild(replyButton);
-
-                // Отображаем ответы
-                message.replies.forEach(reply => {
-                    const replyElement = document.createElement('p');
-                    replyElement.classList.add('reply');
-                    replyElement.textContent = `Support: ${reply}`;
-                    chat.appendChild(replyElement);
-                });
-            });
+            // Очищаем поле ввода
+            document.getElementById('supportMessage').value = '';
         }
-
-        // Функция для запроса ответа на сообщение
-        function promptForReply(messageIndex) {
-            const reply = prompt('Type your reply:');
-            if (reply) {
-                messages[messageIndex].replies.push(reply); // Добавляем ответ
-                updateChat(); // Обновляем чат
-            }
-        }
-
     </script>
 </body>
 </html>
